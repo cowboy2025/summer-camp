@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Raspberry Pi & Python Summer Curriculum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        - Report Info: Weekly learning progression. -> Goal: Show change/growth over time. -> Viz: Line Chart (Chart.js) showing "Cumulative Knowledge" vs. Week. -> Interaction: Hovering over points shows a tooltip with the week's theme. -> Justification: Provides an immediate, motivating visual summary of the learning journey. -> Library: Chart.js (Canvas).
+        - Report Info: Full 7-week curriculum. -> Goal: Organize and inform. -> Presentation: Interactive vertical timeline with expandable sections for each week. -> Interaction: Clicking a week in the nav bar scrolls to it; clicking the section header toggles the visibility of its detailed content (objectives, projects, resources). -> Justification: Breaks down a large large amount of text into manageable chunks, promoting focused learning and preventing cognitive overload. -> Method: HTML/CSS/JS with Tailwind.
+        - Report Info: Required Hardware List. -> Goal: Inform. -> Presentation: A dedicated grid of cards. -> Interaction: Each card represents a component with a link to purchase. -> Justification: A clean, organized, and actionable presentation of required materials. -> Method: HTML/CSS with Tailwind.
+        - Report Info: Key Concepts/Projects per week. -> Goal: Inform/Organize. -> Presentation: Styled lists and text within the expandable weekly sections. -> Interaction: None, focuses on readability. -> Justification: Clear and direct presentation of core learning materials. -> Method: HTML/Tailwind.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            transform: translateX(0);
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #EADDD7;
+            color: #795548;
+            transform: translateX(2px);
+        }
+        .section-card {
+            background-color: #FFFFFF;
+            border: 1px solid #EADDD7;
+            transition: box-shadow 0.3s ease;
+        }
+        .section-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .section-header {
+            cursor: pointer;
+        }
+        .content-hidden {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            visibility: hidden;
+        }
+        .content-visible {
+            max-height: 2000px; 
+            visibility: visible;
+            transition: max-height 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .hardware-card {
+            background-color: #fff; 
+            border: 1px solid #EADDD7;
+            transition: all 0.3s ease;
+        }
+        .hardware-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="flex">
+
+    <nav id="sidebar" class="hidden md:block w-64 bg-[#F7F1ED] h-screen fixed top-0 left-0 p-6 shadow-sm">
+        <h2 class="text-xl font-bold text-[#795548] mb-8">Pi & Python Path</h2>
+        <ul class="space-y-2">
+            <li><a href="#overview" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Overview</a></li>
+            <li><a href="#hardware" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Hardware List</a></li>
+            <li class="pt-4"><span class="text-sm font-semibold text-gray-500 uppercase px-3">Weekly Plan</span></li>
+            <li><a href="#week1" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 1: The Start</a></li>
+            <li><a href="#week2" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 2: Code Control</a></li>
+            <li><a href="#week3" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 3: Interaction</a></li>
+            <li><a href="#week4" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 4: Analog World</a></li>
+            <li><a href="#week5" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 5: Sensors</a></li>
+            <li><a href="#week6" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 6: Movement</a></li>
+            <li><a href="#week7" class="nav-link block p-3 rounded-lg font-medium text-gray-700">Week 7: Capstone</a></li>
+        </ul>
+    </nav>
+
+    <main class="w-full md:ml-64 p-4 md:p-12">
+        <header class="mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#795548] leading-tight">Your Summer of Code with Raspberry Pi & Python</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-4xl">This interactive curriculum is your guide to an exciting 7-week journey, transforming you from a beginner to a confident creator. You'll learn Python programming by making things happen in the real world with a Raspberry Pi. Let's get started!</p>
+        </header>
+
+        <section id="overview" class="mb-16">
+             <h2 class="text-3xl font-bold text-gray-800 mb-4">Your Learning Journey</h2>
+             <p class="text-gray-600 mb-8 max-w-3xl">This chart visualizes the curriculum's progression. As you move through the weeks, the concepts build on each other, increasing in complexity and expanding your skillset. Use this as a map for your adventure in code and electronics.</p>
+             <div class="section-card rounded-xl p-4 md:p-6 mb-8">
+                <h3 class="text-2xl font-bold text-[#795548] mb-4">Welcome to Your Summer Adventure!</h3>
+                <p class="text-gray-600 mb-4">
+                    We're about to embark on something truly exciting this summer! Instead of a traditional camp, we're diving into the thrilling world of programming and electronics right here at home.
+                </p>
+                <p class="text-gray-600 mb-4">
+                    I've put together a special self-learning curriculum that combines Python programming with hands-on projects using a tiny, powerful computer called a Raspberry Pi. Imagine building your own gadgets and making them do exactly what you want with your own code!
+                </p>
+                <h4 class="font-semibold text-lg mb-2 text-[#795548]">Here's a sneak peek at what you'll experience:</h4>
+                <ul class="list-disc list-inside text-gray-600 space-y-1 mb-4">
+                    <li><strong>7 Weeks of Fun:</strong> Each week is packed with new learning objectives and cool projects that build on your skills.</li>
+                    <li><strong>Hands-On Projects:</strong> You'll get to blink LEDs, control sensors, make buzzers sound, and even move motors – bringing your code to life!</li>
+                    <li><strong>Learn Python:</strong> You'll pick up fundamental programming skills that are incredibly useful and open up a world of possibilities for the future.</li>
+                    <li><strong>Build Real Things:</strong> We'll focus on practical projects that clearly show you how programming and hardware interact to create functional devices.</li>
+                    <li><strong>Resources & Tutorials:</strong> For every step of the way, you'll have access to helpful tutorials and resources to guide your learning.</li>
+                </ul>
+                <p class="text-gray-600">
+                    I'm really excited for you to explore this curriculum. It's a fantastic way to learn, create, and have a truly unique and empowering summer experience. Let's get started!
+                </p>
+            </div>
+            <div class="section-card rounded-xl p-4 md:p-6">
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <div id="curriculum">
+        </div>
+
+    </main>
+    
+    <script>
+        const curriculumData = {
+            hardware: {
+                title: "Required Hardware & Software",
+                intro: "Before you begin your coding adventure, you'll need to gather some gear. Below is a list of the essential hardware and software. A starter kit is often the easiest and most cost-effective way to get most of the electronic components.",
+                items: [
+                    { name: "Raspberry Pi 4 Kit", description: "The brain of your projects. A kit usually includes the Pi, power supply, SD card, and case.", link: "https://www.adafruit.com/category/105" },
+                    { name: "Electronics Components Kit", description: "Contains breadboard, wires, LEDs, resistors, buttons, and other essential parts.", link: "https://www.amazon.com/Freenove-Raspberry-Starter-Tutorials-Projects/dp/B073X7P642" },
+                    { name: "MCP3008 ADC", description: "Crucial for reading analog signals, as the Pi doesn't have a built-in analog input.", link: "https://www.adafruit.com/product/856" },
+                    { name: "DHT11/22 Sensor", description: "A digital sensor to measure temperature and humidity in your room.", link: "https://www.sparkfun.com/products/10167" },
+                    { name: "Servo Motor (SG90)", description: "Allows for precise rotational control, perfect for simple robotics.", link: "https://www.adafruit.com/product/169" },
+                    { name: "Raspberry Pi OS", description: "The free, official operating system. Use the Raspberry Pi Imager for easy installation.", link: "https://www.raspberrypi.com/software/" }
+                ]
+            },
+            weeks: [
+                { id: "week1", title: "Week 1: Introduction to Raspberry Pi & Python Basics", icon: "🚀", objectives: ["Understand the Raspberry Pi.", "Navigate the Raspberry Pi OS.", "Write your first Python program.", "Control a single LED."], concepts: ["Single-board computer", "Linux basics", "Python syntax (`print`, `import`)", "GPIO pins", "Basic circuits (LED, resistor)"], projects: ["**'Hello World' in Python:** Print text to the console.", "**Blinking LED:** The classic first hardware project."], resources: [{text: "Raspberry Pi Official Getting Started Guide", link: "https://www.raspberrypi.com/documentation/computers/getting-started.html"}, {text: "Python for Beginners (Official Tutorial)", link: "https://docs.python.org/3/tutorial/"}, {text: "Controlling an LED with Raspberry Pi (Adafruit)", link: "https://learn.adafruit.com/blinking-an-led-with-raspberry-pi"}] },
+                { id: "week2", title: "Week 2: Deeper Python & Basic GPIO Control", icon: "🚦", objectives: ["Understand variables and data types.", "Learn conditional statements (`if/else`).", "Master `for` and `while` loops.", "Control multiple LEDs in patterns."], concepts: ["Variables", "Boolean logic", "`if/else` statements", "`for` and `while` loops", "Python Lists", "`RPi.GPIO` library basics"], projects: ["**Traffic Light Simulation:** Use three LEDs to mimic a traffic light.", "**Knight Rider Lights:** Create a cool chaser light effect."], resources: [{text: "Python `if`/`else` statements (W3Schools)", link: "https://www.w3schools.com/python/python_conditions.asp"}, {text: "Python `for` loops (W3Schools)", link: "https://www.w3schools.com/python/python_for_loops.asp"}, {text: "Python `while` loops (W3Schools)", link: "https://www.w3schools.com/python/python_while_loops.asp"}, {text: "RPi.GPIO documentation (SourceForge)", link: "https://sourceforge.net/p/raspberry-gpio-python/wiki/Examples/"}] },
+                { id: "week3", title: "Week 3: Input & Output - Buttons and Buzzers", icon: "🔔", objectives: ["Read digital input from a push button.", "Understand pull-up/pull-down resistors.", "Trigger actions from button presses.", "Generate simple sounds with a buzzer."], concepts: ["Digital input (`GPIO.input`)", "Pull-up/pull-down resistors", "Event detection", "Active vs. passive buzzers"], projects: ["**Button-Controlled Light:** Press a button to turn an LED on/off.", "**Simple Doorbell:** Use a button to trigger a buzzer."], resources: [{text: "Raspberry Pi Button Tutorial (Raspberry Pi Docs)", link: "https://www.raspberrypi.com/documentation/computers/raspberry-pi-os.html#buttons"}, {text: "Using a Buzzer with Raspberry Pi (Circuit Basics)", link: "https://www.circuitbasics.com/raspberry-pi-buzzer-tutorial/"}] },
+                { id: "week4", title: "Week 4: Analog Input - Potentiometers & LDRs", icon: "🎛️", objectives: ["Understand analog vs. digital signals.", "Learn why an ADC is needed for the Pi.", "Read analog values from sensors.", "Control outputs with analog inputs."], concepts: ["Analog vs. Digital signals", "Analog-to-Digital Converters (ADC)", "SPI communication", "Mapping sensor values", "Pulse Width Modulation (PWM)"], projects: ["**Light Dimmer:** Use a potentiometer to control LED brightness.", "**Light Sensor LED:** Turn an LED on when it gets dark."], resources: [{text: "MCP3008 ADC with Raspberry Pi (Adafruit)", link: "https://learn.adafruit.com/raspberry-pi-analog-to-digital-converters/mcp3008"}, {text: "Using an LDR with Raspberry Pi (Raspberry Pi Spy)", link: "https://www.raspberrypi-spy.co.uk/2013/09/raspberry-pi-light-sensor-ldr-circuit/"}] },
+                { id: "week5", title: "Week 5: Environmental Sensors - Temperature & Humidity", icon: "🌡️", objectives: ["Interface with a DHT11/22 sensor.", "Read multiple data points from one sensor.", "Display sensor data clearly.", "Log data to a file."], concepts: ["Multi-data sensors", "Error handling for sensor reads", "Floating-point numbers", "File I/O in Python"], projects: ["**Room Temp/Humidity Monitor:** Display live data in the terminal.", "**Comfort Indicator:** Use LEDs to show if it's hot, cold, or ideal.", "**Basic Data Logging:** Save sensor readings to a text file."], resources: [{text: "DHT11/DHT22 with Raspberry Pi (Adafruit)", link: "https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/python-setup"}] },
+                { id: "week6", title: "Week 6: Advanced GPIO & Motors/Servos", icon: "⚙️", objectives: ["Deepen understanding of PWM.", "Control the angle of a servo motor.", "Control a DC motor's speed and direction (optional)."], concepts: ["PWM (duty cycle, frequency)", "Servo motor operation", "H-bridge motor drivers", "Mapping values to angles/speeds"], projects: ["**Servo Sweep:** Make a servo move back and forth.", "**Potentiometer-Controlled Servo:** Use a knob to control the servo's position."], resources: [{text: "Servo Control with Raspberry Pi (Raspberry Pi Docs)", link: "https://www.raspberrypi.com/documentation/computers/raspberry-pi-os.html#servos"}, {text: "Controlling a DC Motor with Raspberry Pi and L298N (Electronics Hub)", link: "https://www.electronicshub.org/control-dc-motor-raspberry-pi/"}] },
+                { id: "week7", title: "Week 7: Capstone Project & Next Steps", icon: "🏆", objectives: ["Integrate multiple components into one project.", "Apply problem-solving and debugging skills.", "Explore ideas for future projects."], concepts: ["System integration", "Modular programming (functions)", "Debugging complex systems", "User interface design (console-based)"], projects: ["**Smart Room Monitor:** Build a system that turns on a light (LED) when it's dark and a fan (motor) when it's hot. Display all data in the console."], resources: [{text: "Raspberry Pi Projects (Official)", link: "https://projects.raspberrypi.org/en/projects"}, {text: "Real Python (for more advanced Python topics)", link: "https://realpython.com/"}] }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const curriculumContainer = document.getElementById('curriculum');
+            
+            const hardwareSection = `
+                <section id="hardware" class="mb-16">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">${curriculumData.hardware.title}</h2>
+                    <p class="text-gray-600 mb-8 max-w-3xl">${curriculumData.hardware.intro}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${curriculumData.hardware.items.map(item => `
+                            <div class="hardware-card rounded-xl p-6">
+                                <h3 class="font-bold text-lg text-[#795548]">${item.name}</h3>
+                                <p class="text-gray-600 mt-2 mb-4 text-sm">${item.description}</p>
+                                <a href="${item.link}" target="_blank" class="font-semibold text-sm text-[#8D6E63] hover:text-[#795548] transition-colors">Learn More & Buy →</a>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `;
+            curriculumContainer.innerHTML += hardwareSection;
+
+            curriculumData.weeks.forEach((week, index) => {
+                const weekSection = `
+                <section id="${week.id}" class="mb-8">
+                    <div class="section-card rounded-xl shadow-sm">
+                        <div class="section-header p-6 flex justify-between items-center" data-target="${week.id}-content">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-4">${week.icon}</span>
+                                <div>
+                                    <h3 class="text-xl md:text-2xl font-bold text-gray-800">${week.title}</h3>
+                                </div>
+                            </div>
+                            <span class="text-2xl text-gray-400 transform transition-transform duration-500 ">▼</span>
+                        </div>
+                        <div id="${week.id}-content" class="content-hidden px-6">
+                            <div class="pb-6 grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-gray-200 pt-6">
+                                <div class="md:col-span-1">
+                                    <h4 class="font-semibold text-lg mb-2 text-[#795548]">Learning Objectives</h4>
+                                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                        ${week.objectives.map(obj => `<li>${obj}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="md:col-span-1">
+                                    <h4 class="font-semibold text-lg mb-2 text-[#795548]">Key Concepts</h4>
+                                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                        ${week.concepts.map(con => `<li>${con}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="md:col-span-1">
+                                    <h4 class="font-semibold text-lg mb-2 text-[#795548]">Hands-On Projects</h4>
+                                    <div class="text-gray-600 space-y-2">
+                                        ${week.projects.map(proj => `<p>${proj}</p>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="md:col-span-3 pt-6">
+                                    <h4 class="font-semibold text-lg mb-2 text-[#795548] flex items-center">
+                                        📚 Recommended Resources & Tutorials
+                                    </h4>
+                                    <p class="text-gray-600 mb-4 text-sm">These resources and tutorials are specifically chosen to support the learning objectives and projects for this week:</p>
+                                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                                        ${week.resources.map(res => `<li><a href="${res.link}" target="_blank" class="text-[#8D6E63] hover:underline">${res.text}</a></li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                `;
+                curriculumContainer.innerHTML += weekSection;
+            });
+
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: curriculumData.weeks.map(w => `Week ${w.id.slice(-1)}`),
+                    datasets: [{
+                        label: 'Cumulative Knowledge & Skill',
+                        data: [1, 2, 3.5, 5, 6.5, 8, 10],
+                        borderColor: 'rgba(121, 85, 72, 0.8)',
+                        backgroundColor: 'rgba(121, 85, 72, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(121, 85, 72, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(121, 85, 72, 1)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Skill Level (Conceptual)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Curriculum Timeline' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    const weekIndex = context[0].dataIndex;
+                                    return curriculumData.weeks[weekIndex].title;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const sections = document.querySelectorAll('.section-header');
+            sections.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = document.getElementById(header.dataset.target);
+                    const arrow = header.querySelector('span:last-child');
+                    
+                    if (content.classList.contains('content-hidden')) {
+                        content.classList.remove('content-hidden');
+                        content.classList.add('content-visible');
+                        arrow.style.transform = 'rotate(180deg)';
+                    } else {
+                        content.classList.add('content-hidden');
+                        content.classList.remove('content-visible');
+                        arrow.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pageSections = document.querySelectorAll('main section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            pageSections.forEach(section => {
+                observer.observe(section);
+            });
+
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>
